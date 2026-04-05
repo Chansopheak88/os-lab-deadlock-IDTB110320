@@ -32,7 +32,7 @@ ln -s /run/media/g11-chan-sopheak/<beta-uuid> mount_beta
 ```
 
 ### Observation Checkpoint 1 — Screenshot
-![Level 1 df -h output](./screenshots/level1_df_h.png)
+![Level 1 df -h output](./screenshots/level1_df_h.jpg)
 
 **Explanation:** The `df -h | grep loop` output confirms that both loopback devices are successfully mounted and recognized by the kernel's Virtual File System. Each virtual drive consumes approximately 10MB of space, proving the ext4 file systems were created and attached correctly without requiring root privileges.
 
@@ -64,8 +64,8 @@ This is a classic **Circular Wait** — one of the four necessary conditions for
 `sync_up` locked Vault Alpha and then waited for Vault Beta. At the same time, `sync_down` locked Vault Beta and waited for Vault Alpha. Neither script would release its held lock until it acquired the second one — creating an infinite circular dependency. The system froze permanently until manually interrupted with `Ctrl+C`.
 
 ### Observation Checkpoint 2 — Screenshot
-![Level 3 frozen terminals 1](./screenshots/level3_deadlock1.png)
-![Level 3 frozen terminals 2](./screenshots/level3_deadlock2.png)
+![Level 3 frozen terminals 1](./screenshots/level3_deadlock1.jpg)
+![Level 3 frozen terminals 2](./screenshots/level3_deadlock2.jpg)
 
 ---
 
@@ -83,8 +83,8 @@ Both scripts ran simultaneously — and both froze.
 This simulates a **distributed deadlock** where two separate services on a network each hold a resource the other needs. In a real production environment, this would cause both services to become completely unresponsive — effectively a self-inflicted denial of service. No external attacker is needed; the flawed synchronization logic causes the entire system to freeze, making it unavailable to all users.
 
 ### Observation Checkpoint 3 — Screenshot
-![Level 4 multiplayer deadlock](./screenshots/level4_playerA.png)
-![Level 4 multiplayer deadlock](./screenshots/level4_playerB.png)
+![Level 4 multiplayer deadlock](./screenshots/level4_playerA.jpg)
+![Level 4 multiplayer deadlock](./screenshots/level4_playerB.jpg)
 
 ---
 
@@ -100,8 +100,8 @@ Agreed on a **global lock order**: Alpha's lock must **always** be acquired befo
 By enforcing a strict global ordering, we eliminated the **Circular Wait** condition. Now both processes compete for Alpha's lock first. One will win and hold it, while the other safely waits. The winner then acquires Beta's lock, completes the sync, and releases both locks. Only then does the waiting process proceed — no circular dependency, no freeze.
 
 ### Observation Checkpoint 4 — Screenshot
-![Level 5 successful sequential completion](./screenshots/level5_playerA.png)
-![Level 5 successful sequential completion](./screenshots/level5_playerB.png)
+![Level 5 successful sequential completion](./screenshots/level5_playerA.jpg)
+![Level 5 successful sequential completion](./screenshots/level5_playerB.jpg)
 
 ---
 
@@ -119,8 +119,8 @@ Created a new script `sync_timeout` that uses `flock -w 5` to wait a **maximum o
 In production systems, processes that hang indefinitely consume memory, file descriptors, and CPU scheduling slots. Over time, accumulated frozen processes can exhaust server resources. The timeout strategy implements **Deadlock Recovery via Preemption** — the process voluntarily aborts and releases its held resources, keeping the server healthy and allowing other processes to continue. It trades a failed sync attempt for overall system availability.
 
 ### Observation Checkpoint 5 — Screenshot
-![Level 6 timeout error message](./screenshots/level6_terminal1.png)
-![Level 6 timeout error message](./screenshots/level6_terminal2.png)
+![Level 6 timeout error message](./screenshots/level6_terminal1.jpg)
+![Level 6 timeout error message](./screenshots/level6_terminal2.jpg)
 
 ---
 
@@ -133,7 +133,7 @@ Created a `teardown` script that safely unmounts both virtual vaults, detaches t
 Forcibly deleting a mounted `.img` file or killing the process without unmounting leaves **orphaned loopback devices** in the kernel (`/dev/loopX` entries that still exist but point to nothing). These orphaned devices persist until reboot and consume slots from the kernel's limited pool of available loop devices. On a shared server like ours — where every student is using loop devices — exhausting this pool would prevent any user from mounting new virtual drives. Proper teardown also ensures all pending write buffers are flushed to the image file, preventing data corruption.
 
 ### Observation Checkpoint 6 — Screenshot
-![Level 7 clean df -h after teardown](screenshots/level7_teardown.png)
+![Level 7 clean df -h after teardown](./screenshots/level7_teardown.jpg)
 
 ---
 
