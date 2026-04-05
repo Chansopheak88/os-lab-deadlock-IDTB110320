@@ -133,7 +133,7 @@ Created a `teardown` script that safely unmounts both virtual vaults, detaches t
 Forcibly deleting a mounted `.img` file or killing the process without unmounting leaves **orphaned loopback devices** in the kernel (`/dev/loopX` entries that still exist but point to nothing). These orphaned devices persist until reboot and consume slots from the kernel's limited pool of available loop devices. On a shared server like ours — where every student is using loop devices — exhausting this pool would prevent any user from mounting new virtual drives. Proper teardown also ensures all pending write buffers are flushed to the image file, preventing data corruption.
 
 ### Observation Checkpoint 6 — Screenshot
-![Level 7 clean df -h after teardown](./screenshots/level7_teardown.png)
+![Level 7 clean df -h after teardown](screenshots/level7_teardown.png)
 
 ---
 
